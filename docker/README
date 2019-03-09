@@ -1,2 +1,3 @@
 1) Install docker: https://docs.docker.com/install/linux/docker-ce/ubuntu/
 2) need to download cudnn-8.0-linux-x64-v6.0.tgz from nvidia webpage.
+3) sudo docker build -t app .

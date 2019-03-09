@@ -66,13 +66,6 @@ RUN echo ". /home/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
   conda activate 3dfeatnet && \
   pip install tensorflow-gpu==1.4
 
-RUN echo ". /home/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
-  . ~/.bashrc && \
-  conda activate 3dfeatnet && \
-  echo $PATH && \
-  echo $LD_LIBRARY_PATH && \
-  ls -alh /usr/local/cuda-8.0//lib64/libcudnn*
-
 ##################################
 # Git clone and compile tensor_ops
 ##################################
