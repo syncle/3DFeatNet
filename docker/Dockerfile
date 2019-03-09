@@ -2,10 +2,10 @@ FROM ubuntu:16.04
 
 # https://hub.docker.com/r/tleyden5iwx/ubuntu-cuda/dockerfile/
 
-ENV http_proxy  "http://proxy-chain.intel.com:911"
-ENV HTTP_PROXY  "http://proxy-chain.intel.com:911"
-ENV https_proxy "http://proxy-chain.intel.com:911"
-ENV HTTPS_PROXY "http://proxy-chain.intel.com:911"
+ENV http_proxy  ""
+ENV HTTP_PROXY  ""
+ENV https_proxy ""
+ENV HTTPS_PROXY ""
 
 ######################
 # Install Cuda
