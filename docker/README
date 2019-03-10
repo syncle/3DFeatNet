@@ -1,4 +1,49 @@
+
+# README for Docker_old
 0) Modify proxy entries in Dockerfile 
 1) Install docker: https://docs.docker.com/install/linux/docker-ce/ubuntu/
 2) need to download cudnn-8.0-linux-x64-v6.0.tgz from nvidia webpage.
 3) sudo docker build -t app .
+
+
+
+# README for manual method (this worked actually...)
+
+# If you have nvidia-docker 1.0 installed: we need to remove it and all existing GPU containers
+docker volume ls -q -f driver=nvidia-docker | xargs -r -I{} -n1 docker ps -q -a -f volume={} | xargs -r docker rm -f
+sudo apt-get purge -y nvidia-docker
+
+# Add the package repositories
+curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | \
+  sudo apt-key add -
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | \
+  sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+sudo apt-get update
+
+# Install nvidia-docker2 and reload the Docker daemon configuration
+sudo apt-get install -y nvidia-docker2
+sudo pkill -SIGHUP dockerd
+
+# Run the following and get container ID
+sudo nvidia-docker run nvidia/cuda:8.0-cudnn6-devel-ubuntu16.04
+
+# start and attach (container ID is 248d659e8c63)
+sudo docker container start 248d659e8c63
+sudo docker container attach 248d659e8c63
+
+git clone git clone https://github.com/syncle/3DFeatNet
+cd 3DFeatNet
+mkdir 3DFeatNet/ckpt/
+
+# chanage "python" to "python3" in tf_ops/grouping/tf_grouping_compile.sh, tf_ops/sampling/tf_sampling_compile.sh, inference_example.sh
+
+# copy checkpoint file to the container
+sudo docker cp pretrained_model.zip 248d659e8c63:/root/3DFeatNet/ckpt
+unzip pretrained_model.zip 
+
+# run tf_ops/grouping/tf_grouping_compile.sh and /tf_ops/sampling/tf_sampling_compile.sh
+
+chmod +x *.sh
+run inference_example.sh
+
