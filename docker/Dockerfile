@@ -1,86 +1,39 @@
-FROM ubuntu:16.04
+#FROM nvidia/cuda:8.0-cudnn6-devel-ubuntu16.04
+FROM tensorflow/tensorflow:1.4.0-devel-gpu-py3
 
-# https://hub.docker.com/r/tleyden5iwx/ubuntu-cuda/dockerfile/
 
 ENV http_proxy  ""
 ENV HTTP_PROXY  ""
 ENV https_proxy ""
 ENV HTTPS_PROXY ""
 
-######################
-# Install Cuda
-######################
-# A docker container with the Nvidia kernel module and CUDA drivers installed
-ENV CUDA_RUN https://developer.nvidia.com/compute/cuda/8.0/Prod2/local_installers/cuda_8.0.61_375.26_linux-run
-
-RUN apt-get update && apt-get install -q -y \
-  wget \
-  build-essential \
-  module-init-tools \
-  kmod \
-  sudo
-
-RUN cd /opt && \
-  wget $CUDA_RUN && \
-  mv cuda_8.0.61_375.26_linux-run cuda_8.0.61_375.26_linux.run && \
-  chmod +x *.run && \
-  mkdir nvidia_installers && \
-  ./cuda_8.0.61_375.26_linux.run -extract=`pwd`/nvidia_installers && \
-  cd nvidia_installers && \
-  ls && \
-  ./NVIDIA-Linux-x86_64-375.26.run -s -N --no-kernel-module
-
-RUN cd /opt/nvidia_installers && \
-  ./cuda-linux64-rel-8.0.61-21551265.run -noprompt
-
-#  python -c "import tensorflow as tf"
-COPY cudnn-8.0-linux-x64-v6.0.tgz .
-RUN tar -xzvf cudnn-8.0-linux-x64-v6.0.tgz && \
-  sudo cp -P cuda/include/cudnn.h /usr/local/cuda-8.0/include && \
-  sudo cp -P cuda/lib64/libcudnn* /usr/local/cuda-8.0/lib64/ && \
-  sudo chmod a+r /usr/local/cuda-8.0/lib64/libcudnn* && \
-  rm cudnn-8.0-linux-x64-v6.0.tgz
-
-# Ensure the CUDA libs and binaries are in the correct environment variables
-#ENV LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-8.0/lib64
 ENV CUDA_HOME=/usr/local/cuda-8.0/
 ENV PATH=$PATH:$CUDA_HOME/bin
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUDA_HOME/lib64
+
+# this fails, but I don't know why
+RUN python3 -c 'import tensorflow as tf; print(tf.sysconfig.get_include())'
+
 RUN nvcc --version
 
+RUN apt-get update && apt-get install -q -y git unzip wget
+RUN pip install sklearn
 
-######################
-# Install Conda
-######################
-ENV HOME /home/
-ENV CONDA_SHELL https://repo.anaconda.com/archive/Anaconda3-2018.12-Linux-x86_64.sh
-
-RUN wget $CONDA_SHELL && \
-  chmod +x *.sh && \
-  ./Anaconda3-2018.12-Linux-x86_64.sh -b -p $HOME/conda
-
-ENV PATH="$HOME/conda/bin:$PATH"
-RUN echo ". /home/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
-  . ~/.bashrc && \
-  conda create -n 3dfeatnet python=3.5 && \
-  conda activate 3dfeatnet && \
-  pip install tensorflow-gpu==1.4
-
-##################################
-# Git clone and compile tensor_ops
-##################################
-RUN apt-get install -q -y git
-RUN cd $HOME && \
-  git clone https://github.com/yewzijian/3DFeatNet
-RUN echo ". /home/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
-  . ~/.bashrc && \
-  conda activate 3dfeatnet && \ 
+ENV HOME=/home/
+RUN cd $HOME && \ 
+  git clone https://github.com/syncle/3DFeatNet && \
+  cd $HOME/3DFeatNet/ && git checkout docker && \
+  mkdir $HOME/3DFeatNet/ckpt/
+COPY pretrained_model.zip $HOME/3DFeatNet/ckpt/
+RUN cd $HOME/3DFeatNet/ckpt && \
+  unzip pretrained_model.zip && \
   chmod +x $HOME/3DFeatNet/tf_ops/grouping/*.sh && \
-  chmod +x $HOME/3DFeatNet/tf_ops/sampling/*.sh && \
+  chmod +x $HOME/3DFeatNet/tf_ops/sampling/*.sh 
+
+RUN alias python=python3 && \
+  python3 -c "import tensorflow as tf" && \
+  cd $HOME/3DFeatNet/ && \
   cd $HOME/3DFeatNet/tf_ops/grouping && \
   ./tf_grouping_compile.sh && \
   cd $HOME/3DFeatNet/tf_ops/sampling && \
-  ./tf_sampling_compile.sh
-
-
-
+  ./tf_sampling_compile.sh 
