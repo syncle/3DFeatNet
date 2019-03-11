@@ -73,7 +73,8 @@ def compute_descriptors():
     os.makedirs(args.output_dir, exist_ok=True)
 
     # Data
-    binFiles = [f for f in os.listdir(args.data_dir) if f.endswith('.bin')]
+    #binFiles = [f for f in os.listdir(args.data_dir) if f.endswith('.bin')]
+    binFiles = [f for f in os.listdir(args.data_dir) if f.endswith('.npy')]
     data_dim = args.data_dim
     logger.info('Found %i bin files in directory: %s, each assumed to be of dim %i',
                 len(binFiles), args.data_dir, data_dim)
@@ -172,10 +173,14 @@ def compute_descriptors():
                          feed_dict={cloud_pl: pointclouds, is_training: False, end_points['keypoints']: xyz_nms})
 
             # Save out the output
-            with open(os.path.join(args.output_dir, '{}.bin'.format(fname_no_ext)), 'wb') as f:
-                xyz_features = np.concatenate([xyz[0, 0:num_keypoints[0], :], features[0, 0:num_keypoints[0], :]],
-                                              axis=1)
-                xyz_features.tofile(f)
+            #with open(os.path.join(args.output_dir, '{}.bin'.format(fname_no_ext)), 'wb') as f:
+            #    xyz_features = np.concatenate([xyz[0, 0:num_keypoints[0], :], features[0, 0:num_keypoints[0], :]],
+            #                                  axis=1)
+            #    xyz_features.tofile(f)
+            f = os.path.join(args.output_dir, '{}'.format(fname_no_ext))
+            xyz_features = np.concatenate([xyz[0, 0:num_keypoints[0], :], 
+                      features[0, 0:num_keypoints[0], :]], axis=1)
+            np.save(f, xyz_features)
 
             num_processed += 1
             logger.info('Processed %i / %i images', num_processed, len(binFiles))

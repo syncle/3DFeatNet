@@ -173,6 +173,8 @@ class DataGenerator(object):
         if path.endswith('bin'):
             model = np.fromfile(path, dtype=np.float32)
             model = np.reshape(model, (-1, num_cols))
+        elif path.endswith('npy'):
+            model = np.load(path).astype(np.float32)
 
         else:
             model = np.loadtxt(path, dtype=np.float32, delimiter=',')
